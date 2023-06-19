@@ -26,6 +26,7 @@ export default function StreamViewer() {
             break;
           }
           setStreamText((prevText) => prevText + new TextDecoder().decode(value));
+          await sleep(1000);
         }
       } catch (error) {
         console.error("Error from stream:", error);
@@ -75,4 +76,8 @@ export default function StreamViewer() {
    
   </div>
   );
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
 }

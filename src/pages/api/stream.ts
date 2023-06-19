@@ -1,39 +1,46 @@
 import { NextRequest } from "next/server";
 
-export const config = {
-  runtime: "edge",
-};
+export const runtime = "edge";
 
 export default function handler(req: NextRequest) {
   console.log("running stream handler");
-  const signal = req.signal;
-  const stream = new TransformStream();
-  const writer = stream.writable.getWriter();
+  const stream = createStream(integers())
 
-  const interval = setInterval(() => {
-    const randomString = Math.random().toString(36).substring(2);
-    console.log(`sending: ${`data: ${randomString}\n\n`}`);
-    const encoder = new TextEncoder();
-    writer.write(encoder.encode(`data: ${randomString}\n\n`));
-  }, 1000);
-
-  signal.addEventListener("abort", () => {
-    // ! This is never called
-    console.log("ABORTING");
-    clearInterval(interval);
-    writer.close();
-  });
-
-  new Promise((resolve) => setTimeout(resolve, 8000)).finally(() => {
-    clearInterval(interval);
-    writer.close();
-  });
-
-  return new Response(stream.readable, {
+  return new Response(stream, {
     headers: new Headers({
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
+      "Content-Type": "text/plain; charset=utf-8",
     }),
   });
+}
+
+
+
+async function* integers() {
+  let i = 1
+  const encoder = new TextEncoder();
+  while (true) {
+    console.log("yield", i)
+    yield encoder.encode(`data: ${i++}\n\n`);
+ 
+    await sleep(100)
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms))
+}
+ 
+// Wraps a generator into a ReadableStream
+function createStream(iterator) {
+  return new ReadableStream({
+    async pull(controller) {
+      const { value, done } = await iterator.next();
+
+      if (done) {
+        controller.close();
+      } else {
+        controller.enqueue(value)
+      }
+    },
+  })
 }
