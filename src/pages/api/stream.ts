@@ -26,12 +26,12 @@ async function* integers() {
   }
 }
 
-function sleep(ms) {
+function sleep(ms : any) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
  
 // Wraps a generator into a ReadableStream
-function createStream(iterator) {
+function createStream(iterator: any) {
   return new ReadableStream({
     async pull(controller) {
       const { value, done } = await iterator.next();
