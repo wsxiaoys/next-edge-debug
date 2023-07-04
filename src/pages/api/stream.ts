@@ -1,26 +1,34 @@
 import { NextRequest } from "next/server";
 
-export const runtime = "edge";
+export const config = {
+  runtime: "edge",
+};
 
 export default function handler(req: NextRequest) {
+  req.signal.addEventListener("abort", () => {
+    console.log("aborted");
+  });
+
   console.log("running stream handler");
-  const stream = createStream(integers())
+  const stream = createStream(integers());
 
   return new Response(stream, {
     headers: new Headers({
-      "Content-Type": "text/plain; charset=utf-8",
+      "Content-Type": "text/event-stream",
     }),
   });
 }
 
 
-
+let base = 0;
 async function* integers() {
+  base++;
   let i = 1
   const encoder = new TextEncoder();
   while (true) {
-    console.log("yield", i)
-    yield encoder.encode(`data: ${i++}\n\n`);
+    const n = base * 100000 + i;
+    i++;
+    yield encoder.encode(`data: ${n}\n\n`);
  
     await sleep(100)
   }

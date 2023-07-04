@@ -42,6 +42,7 @@ export default function StreamViewer() {
 
   const handleStopStream = () => {
     if (controller) {
+      console.log("abort")
       controller.abort();
     }
   };
